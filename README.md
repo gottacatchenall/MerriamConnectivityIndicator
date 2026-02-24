@@ -2,6 +2,23 @@
 
 An extension of Circuitscape and Omniscape for computing landscape connectivity using a sliding circular window, where current is injected at 'spokes' on the boundary of the sliding window, injects current into these spokes, and measures the effective resistance of current flow to the center of the sliding window, which is set to ground.
 
+## Example
+
+
+```bash
+# Download the example raster (only needed once)
+curl https://raw.githubusercontent.com/Circuitscape/datasets/main/data/nlcd_2016_frederick_md.tif example/landscape.tif 
+
+
+# Run the example ini file
+cd example
+julia --project -e '
+    using MerriamConnectivityIndicator
+    run_mci("example.ini")
+'
+
+```
+
 
 ## File Structure
 

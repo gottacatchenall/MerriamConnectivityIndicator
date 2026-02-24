@@ -2,12 +2,43 @@
 # WINDOW GRID CONSTRUCTION
 # ==============================================================================
 
+# Reflect index i into the valid range 1:n (mirror padding at boundaries).
+# Examples for n=5: 0→2, -1→3, 6→4, 7→3
+@inline function _mirror(i::Int, n::Int)::Int
+    i = i < 1 ? 2 - i : (i > n ? 2 * n - i : i)
+    return clamp(i, 1, n)  # safety for radius > raster size
+end
+
+# Extract a full (2r+1)×(2r+1) window centered at (cr, cc) using mirror
+# padding so out-of-raster pixels reflect real landscape values rather than
+# being treated as zero conductance.
+function _extract_mirrored(
+    resistance_full::Array{T, 2},
+    cr_global::Int, cc_global::Int, radius::Int
+)::Matrix{T} where T
+    h, w = size(resistance_full)
+    sz = 2 * radius + 1
+    result = Matrix{T}(undef, sz, sz)
+    for di in 1:sz
+        ri = _mirror(cr_global - radius + di - 1, h)
+        for dj in 1:sz
+            cj = _mirror(cc_global - radius + dj - 1, w)
+            result[di, dj] = resistance_full[ri, cj]
+        end
+    end
+    return result
+end
+
 """
     prepare_window(resistance_full, row, col, config) -> NamedTuple or nothing
 
 Shared setup for both advanced and pairwise MCI modes. Extracts the resistance
 subset around `(row, col)`, converts to conductance, applies the circular mask,
 identifies valid spoke positions, and builds the ground grid.
+
+The window is always a full (2r+1)×(2r+1) square. Pixels outside the raster
+boundary are filled by mirror reflection so edge windows have the same network
+size as interior windows, eliminating the edge-inflation artifact.
 
 Returns a NamedTuple `(conductance, valid_positions, ground, center_row, center_col)`
 or `nothing` if the center is invalid or no valid spokes exist.
@@ -19,20 +50,15 @@ function prepare_window(
     config::MCIConfig
 ) where T <: AbstractFloat
 
-    grid_height, grid_width = size(resistance_full)
     radius = config.search_radius
 
-    # --- Extract rectangular subset around center ---
-    row_lo = max(1, center_row_global - radius)
-    row_hi = min(grid_height, center_row_global + radius)
-    col_lo = max(1, center_col_global - radius)
-    col_hi = min(grid_width, center_col_global + radius)
+    # Always extract a full (2r+1)×(2r+1) window; mirror at boundaries.
+    resistance_sub = _extract_mirrored(resistance_full,
+                                       center_row_global, center_col_global, radius)
 
-    resistance_sub = resistance_full[row_lo:row_hi, col_lo:col_hi]
-
-    # Center position in local (subset) coordinates
-    cr = center_row_global - row_lo + 1
-    cc = center_col_global - col_lo + 1
+    # Center is always at the middle of the fixed-size window.
+    cr = radius + 1
+    cc = radius + 1
 
     # --- Build conductance grid (zero out invalid cells) ---
     conductance = 1.0 ./ resistance_sub

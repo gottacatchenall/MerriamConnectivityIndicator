@@ -47,8 +47,9 @@ function MCIConfig(;
     parallel_batch_size::Int64 = 100
 )
     return MCIConfig(
-        search_radius, num_spokes, injected_current, solver_type,
-        connect_four_neighbors, mask_nodata, nodata_value, parallel_batch_size
+        search_radius, num_spokes, injected_current,
+        solver_type, connect_four_neighbors, mask_nodata, nodata_value,
+        parallel_batch_size
     )
 end
 

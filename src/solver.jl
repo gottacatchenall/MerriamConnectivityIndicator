@@ -308,5 +308,5 @@ function solve_window_pairwise(
         end
     end
 
-    return isempty(spoke_resistances) ? T(NaN) : sum(spoke_resistances)
+    return isempty(spoke_resistances) ? T(NaN) : mean(spoke_resistances)
 end

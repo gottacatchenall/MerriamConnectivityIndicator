@@ -25,6 +25,7 @@ are available:
 module MerriamConnectivityIndicator
 
     using SparseArrays
+    using DelimitedFiles
     using LinearAlgebra.BLAS
     using ArchGDAL
     using Base.Threads
@@ -42,6 +43,10 @@ module MerriamConnectivityIndicator
     include("window.jl")
     include("solver.jl")
     include("mci.jl")
+    include("mci_speedy.jl")
+    include("config.jl")
+    include("io.jl")
+    include("run.jl")
 
     # ==============================================================================
     # EXPORTS
@@ -50,5 +55,7 @@ module MerriamConnectivityIndicator
     export MCIConfig, SpokePoint
     export compute_mci, compute_mci_pairwise, compute_mci_from_dict
     export generate_spoke_points, build_window_grids, solve_window_pairwise
+    export compute_mci_direct
+    export run_mci
 
 end # module MerriamConnectivityIndicator
