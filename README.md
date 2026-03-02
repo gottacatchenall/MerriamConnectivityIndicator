@@ -7,7 +7,7 @@ An extension of Circuitscape and Omniscape for computing landscape connectivity 
 
 ```bash
 # Download the example raster (only needed once)
-curl https://raw.githubusercontent.com/Circuitscape/datasets/main/data/nlcd_2016_frederick_md.tif example/landscape.tif 
+curl https://raw.githubusercontent.com/Circuitscape/datasets/main/data/nlcd_2016_frederick_md.tif -o example/landscape.tif 
 
 
 # Run the example ini file
