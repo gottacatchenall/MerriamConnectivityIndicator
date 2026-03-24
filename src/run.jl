@@ -62,7 +62,8 @@ function run_mci(
         connect_four_neighbors = lowercase(get(cfg, "connect_four_neighbors_only", "false")) in TRUELIST,
         mask_nodata         = lowercase(get(cfg, "mask_nodata", "true")) in TRUELIST,
         nodata_value        = parse(Float64, get(cfg, "nodata_value", "-9999.0")),
-        parallel_batch_size = parse(Int64,   get(cfg, "parallel_batch_size", "100"))
+        parallel_batch_size = parse(Int64,   get(cfg, "parallel_batch_size", "100")),
+        spoke_aggregation   = Symbol(get(cfg, "spoke_aggregation", "median"))
     )
 
     parallelize = lowercase(get(cfg, "parallelize", "true")) in TRUELIST

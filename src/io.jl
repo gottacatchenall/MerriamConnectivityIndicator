@@ -95,31 +95,42 @@ end
     write_cfg(cfg::Dict{String,String}, path::String)
 
 Write the configuration dictionary to an .ini file for reproducibility.
+All keys present in cfg are written, organized into sections for known parameters.
+Any extra keys not belonging to a known section are written under [Other].
 """
 function write_cfg(cfg::Dict{String, String}, path::String)
-    # Group keys by section
-    input_keys = ["resistance_file", "reclass_table", "project_name"]
-    param_keys = ["mode", "search_radius", "num_spokes", "injected_current"]
+    # Known keys grouped by section (defines order within each section)
+    input_keys   = ["resistance_file", "reclass_table", "project_name"]
+    param_keys   = ["mode", "search_radius", "num_spokes", "injected_current", "spoke_aggregation"]
     compute_keys = ["solver", "connect_four_neighbors_only", "mask_nodata",
                     "nodata_value", "parallelize", "parallel_batch_size", "verbose"]
-    output_keys = ["write_as_tif"]
+    output_keys  = ["write_as_tif"]
+
+    known_keys = Set(vcat(input_keys, param_keys, compute_keys, output_keys))
+    extra_keys = sort([k for k in keys(cfg) if k ∉ known_keys])
 
     open(path, "w") do f
         write(f, "[Input files]\n")
         for k in input_keys
-            haskey(cfg, k) && write(f, "$k = $(cfg[k])\n")
+            write(f, "$k = $(get(cfg, k, ""))\n")
         end
         write(f, "\n[MCI Parameters]\n")
         for k in param_keys
-            haskey(cfg, k) && write(f, "$k = $(cfg[k])\n")
+            write(f, "$k = $(get(cfg, k, ""))\n")
         end
         write(f, "\n[Computation]\n")
         for k in compute_keys
-            haskey(cfg, k) && write(f, "$k = $(cfg[k])\n")
+            write(f, "$k = $(get(cfg, k, ""))\n")
         end
         write(f, "\n[Output]\n")
         for k in output_keys
-            haskey(cfg, k) && write(f, "$k = $(cfg[k])\n")
+            write(f, "$k = $(get(cfg, k, ""))\n")
+        end
+        if !isempty(extra_keys)
+            write(f, "\n[Other]\n")
+            for k in extra_keys
+                write(f, "$k = $(cfg[k])\n")
+            end
         end
     end
 end

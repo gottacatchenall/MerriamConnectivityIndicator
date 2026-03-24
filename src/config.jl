@@ -16,6 +16,7 @@ function init_cfg()
     cfg["search_radius"] = ""
     cfg["num_spokes"] = "8"
     cfg["injected_current"] = "1.0"
+    cfg["spoke_aggregation"] = "median"
 
     # Computation
     cfg["solver"] = "cg+amg"

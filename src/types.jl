@@ -24,6 +24,9 @@ Configuration for a Merriam Connectivity Indicator analysis.
 - `mask_nodata::Bool = true`: Set MCI to NaN where the input raster is nodata.
 - `nodata_value::Float64 = -9999.0`: Value that encodes missing data in the raster.
 - `parallel_batch_size::Int64 = 100`: Windows per batch in threaded mode.
+- `spoke_aggregation::Symbol = :median`: How to aggregate per-spoke effective resistances
+  in pairwise and direct modes. `:median` (default) or `:mean`. Not used in advanced mode,
+  which applies McRae's energy formula to a single combined solve.
 """
 struct MCIConfig
     search_radius::Int64
@@ -34,6 +37,7 @@ struct MCIConfig
     mask_nodata::Bool
     nodata_value::Float64
     parallel_batch_size::Int64
+    spoke_aggregation::Symbol
 end
 
 function MCIConfig(;
@@ -44,12 +48,15 @@ function MCIConfig(;
     connect_four_neighbors::Bool = false,
     mask_nodata::Bool = true,
     nodata_value::Float64 = -9999.0,
-    parallel_batch_size::Int64 = 100
+    parallel_batch_size::Int64 = 100,
+    spoke_aggregation::Symbol = :median
 )
+    spoke_aggregation in (:median, :mean) ||
+        error("spoke_aggregation must be :median or :mean, got :$spoke_aggregation")
     return MCIConfig(
         search_radius, num_spokes, injected_current,
         solver_type, connect_four_neighbors, mask_nodata, nodata_value,
-        parallel_batch_size
+        parallel_batch_size, spoke_aggregation
     )
 end
 

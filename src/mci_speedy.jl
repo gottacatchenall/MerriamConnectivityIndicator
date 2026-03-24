@@ -107,8 +107,8 @@ end
 Solve a single MCI window by direct Cholesky factorization of the graph Laplacian.
 
 Grounds the center node (removes its row/col from the Laplacian), then injects
-1A at each spoke independently via batched back-substitution. Returns the mean
-spoke→center effective resistance.
+1A at each spoke independently via batched back-substitution. Returns the median
+(default) or mean spoke→center effective resistance.
 
 This is equivalent to the pairwise mode result but avoids all Circuitscape
 framework overhead.
@@ -118,7 +118,8 @@ function solve_window_direct(
     center_row::Int64,
     center_col::Int64,
     valid_positions::Vector{Tuple{Int, Int}};
-    use_four_neighbors::Bool = false
+    use_four_neighbors::Bool = false,
+    aggregation::Symbol = :median
 )::T where T <: AbstractFloat
 
     # Build nodemap (reuse existing function from solver.jl)
@@ -163,18 +164,16 @@ function solve_window_direct(
     V = F \ RHS
 
     # R_eff for spoke k = voltage at spoke k's node (center is grounded at V=0)
-    r_eff_sum = zero(T)
-    n_valid = 0
+    spoke_resistances = T[]
     for k in 1:n_spokes
         r = V[spoke_reduced[k], k]
         if r >= 0 && isfinite(r)
-            r_eff_sum += r
-            n_valid += 1
+            push!(spoke_resistances, r)
         end
     end
 
-    n_valid == 0 && return T(NaN)
-    return r_eff_sum / n_valid
+    isempty(spoke_resistances) && return T(NaN)
+    return aggregation === :median ? median(spoke_resistances) : mean(spoke_resistances)
 end
 
 # ==============================================================================
@@ -202,7 +201,8 @@ function compute_mci_direct_for_window(
     try
         return solve_window_direct(
             w.conductance, w.center_row, w.center_col, w.valid_positions;
-            use_four_neighbors = config.connect_four_neighbors
+            use_four_neighbors = config.connect_four_neighbors,
+            aggregation = config.spoke_aggregation
         )
     catch e
         @warn "Direct MCI solve failed at ($center_row_global, $center_col_global): $e"

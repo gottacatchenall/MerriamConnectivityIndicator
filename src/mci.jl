@@ -162,7 +162,8 @@ function compute_mci_pairwise_for_window(
         return solve_window_pairwise(
             w.conductance, w.center_row, w.center_col, w.valid_positions;
             solver_type = config.solver_type,
-            use_four_neighbors = config.connect_four_neighbors
+            use_four_neighbors = config.connect_four_neighbors,
+            aggregation = config.spoke_aggregation
         )
     catch e
         @warn "Pairwise MCI solve failed at ($center_row_global, $center_col_global): $e"
@@ -279,7 +280,8 @@ function compute_mci_from_dict(
         connect_four_neighbors = lowercase(get(config_dict, "connect_four_neighbors_only", "false")) in TRUELIST,
         mask_nodata         = lowercase(get(config_dict, "mask_nodata", "true")) in TRUELIST,
         nodata_value        = parse(Float64, get(config_dict, "nodata_value", "-9999.0")),
-        parallel_batch_size = parse(Int64,   get(config_dict, "parallel_batch_size", "100"))
+        parallel_batch_size = parse(Int64,   get(config_dict, "parallel_batch_size", "100")),
+        spoke_aggregation   = Symbol(get(config_dict, "spoke_aggregation", "median"))
     )
 
     parallelize = lowercase(get(config_dict, "parallelize", "true")) in TRUELIST

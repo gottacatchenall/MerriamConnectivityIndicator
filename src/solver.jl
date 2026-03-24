@@ -220,13 +220,14 @@ end
     solve_window_pairwise(conductance, center_row, center_col, valid_positions; ...) -> T
 
 Solve a single MCI window using Circuitscape's **network pairwise** pipeline and
-return the mean effective resistance between each spoke and the center.
+return the aggregated effective resistance between each spoke and the center.
 
 The conductance grid is converted to a network (edge list + focal node IDs),
 then solved via `compute_graph_data` → `single_ground_all_pairs`, which computes
 effective resistances between all focal-point pairs.
 
-Returns the mean R_eff across all spoke→center pairs, or `NaN` if no valid pairs.
+Returns the median (default) or mean R_eff across all spoke→center pairs,
+or `NaN` if no valid pairs.
 """
 function solve_window_pairwise(
     conductance::Array{T, 2},
@@ -234,7 +235,8 @@ function solve_window_pairwise(
     center_col::Int64,
     valid_positions::Vector{Tuple{Int, Int}};
     solver_type::String = "cg+amg",
-    use_four_neighbors::Bool = false
+    use_four_neighbors::Bool = false,
+    aggregation::Symbol = :median
 )::T where T <: AbstractFloat
 
     # --- Convert conductance grid to network representation ---
@@ -308,5 +310,6 @@ function solve_window_pairwise(
         end
     end
 
-    return isempty(spoke_resistances) ? T(NaN) : mean(spoke_resistances)
+    isempty(spoke_resistances) && return T(NaN)
+    return aggregation === :median ? median(spoke_resistances) : mean(spoke_resistances)
 end
